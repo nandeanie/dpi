@@ -63,3 +63,43 @@ RawPacket ── PacketParser ──▶ ParsedPacket
                            │
                            ▼
                      BlockRuleSet.evaluate
+                           │
+                 ┌─────────┴─────────┐
+                 ▼                   ▼
+        PcapFileWriter        ProcessingStatistics
+
+Pipeline wiring (multi-threaded mode):
+
+PcapFileReader ─▶ PacketParser ─▶ [LB input queues]
+                                        │  hash(FiveTuple) % loadBalancerCount
+                                        ▼
+                              LoadBalancerWorker (× N)
+                                        │  hash(FiveTuple) % fastPathsPerLB
+                                        ▼
+                               FastPathWorker (× N×M)
+                          [own FlowTable, shared BlockRuleSet]
+                                        │
+                                        ▼
+                              [shared output queue]
+                                        │
+                                        ▼
+                             OutputWriterWorker ─▶ PcapFileWriter
+```
+
+## Sequence of communication (single request through the pipeline)
+
+```
+Main            Reader          LoadBalancer      FastPath        Writer
+ │  run()         │                  │                │              │
+ │───────────────▶│                  │                │              │
+ │            readNextPacket()       │                │              │
+ │            parse -> ParsedPacket  │                │              │
+ │            put(msg) on LB queue ─▶│                │              │
+ │                                   │ take()         │              │
+ │                                hash -> pick FP     │              │
+ │                                put(msg) on FP ────▶│              │
+ │                                   │                │ take()       │
+ │                                   │            classify (SNI/Host) │
+ │                                   │            evaluate block rule │
+ │                                   │            [not blocked] put ─▶│
+ │                                   │                │           write │
