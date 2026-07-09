@@ -37,3 +37,29 @@ com.dpiengine
 ├── util          NetworkByteReader, IpAddressFormatter
 ├── DpiEngineSingleThreaded   (entry point, sequential engine)
 ├── DpiEngineMultiThreaded    (entry point, concurrent pipeline)
+└── ConsoleApp                (entry point, interactive menu-driven console)
+```
+
+`client` and `server` packages from a typical assignment template are intentionally absent —
+there is no client-server boundary in this project to put them around. If a real network layer
+is ever wanted (e.g. a long-running DPI service that accepts capture uploads over TCP), it
+would sit cleanly *outside* this structure, calling into `pipeline.DpiPipeline` the same way
+`DpiEngineMultiThreaded.main` does now.
+
+## Class diagram (text)
+
+```
+FiveTuple ──────────────┐
+                         │ (flowKey)
+RawPacket ── PacketParser ──▶ ParsedPacket
+                                  │
+                    ┌─────────────┼──────────────┐
+                    ▼             ▼              ▼
+            TlsSniExtractor  HttpHostExtractor  AppTypeClassifier
+                    │             │              │
+                    └──────┬──────┴──────────────┘
+                           ▼
+                         Flow  ◀── FlowTable (per FastPath)
+                           │
+                           ▼
+                     BlockRuleSet.evaluate
