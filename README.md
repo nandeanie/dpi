@@ -17,3 +17,23 @@ no `accept()`/`connect()`, nothing on the wire. It is a single-process pipeline 
 PCAP file, fans work out across worker threads connected by in-memory queues, and writes a
 PCAP file. This port preserves that architecture faithfully rather than inventing a network
 protocol that never existed in the source project. The "network" terminology in the class
+names below refers to *packet parsing* (Ethernet/IP/TCP/UDP), not to sockets.
+
+
+## Package structure
+
+```
+com.dpiengine
+├── model        FiveTuple, ParsedPacket, RawPacket, Flow, AppType, PcapGlobalHeader,
+│                 PcapPacketHeader, ProcessingStatistics
+├── protocol      PacketParser (Ethernet/IPv4/TCP/UDP), TlsSniExtractor, HttpHostExtractor,
+│                 AppTypeClassifier
+├── io            PcapFileReader, PcapFileWriter
+├── service       BlockRuleSet (rule manager), FlowTable (connection tracker), ReportPrinter
+├── pipeline      PipelineMessage, LoadBalancerWorker, FastPathWorker, OutputWriterWorker,
+│                 DpiPipeline (orchestrator)
+├── config        EngineOptions, CliArgumentParser
+├── exception     PcapFormatException, PacketParseException, EngineConfigurationException
+├── util          NetworkByteReader, IpAddressFormatter
+├── DpiEngineSingleThreaded   (entry point, sequential engine)
+├── DpiEngineMultiThreaded    (entry point, concurrent pipeline)
