@@ -187,3 +187,21 @@ java -cp target/dpi-packet-analyzer.jar com.dpiengine.DpiEngineMultiThreaded --i
   interrupt happens mid-run.
 - **Backpressure**: every queue in the pipeline is a bounded `ArrayBlockingQueue`. If the
   writer falls behind, `put()` blocks upstream naturally — no unbounded memory growth from a
+  fast reader outrunning a slow writer.
+- **Graceful, race-free shutdown**: the reader sends one poison pill per load-balancer queue;
+  each load balancer forwards a poison pill to each of its fast paths; the orchestrator waits
+  on every load-balancer and fast-path `Future` via `Future.get()` before sending a single
+  poison pill to the writer and waiting on that too. No thread is ever interrupted mid-write.
+
+## Testing performed
+
+This was compiled and exercised end-to-end against a synthetic capture containing TLS
+ClientHello packets (with SNI for `youtube.com`, `github.com`, and a third host on a blocked
+IP) plus a DNS packet, using both engines and several block-rule combinations, confirming:
+
+- SNI extraction matches all three TLS packets.
+- App-type, domain, and IP block rules each correctly drop the intended flow.
+- The multi-threaded pipeline (2 load balancers × 2 fast paths) produces the same
+  classification results as the single-threaded engine.
+- Missing arguments, a non-PCAP input file, and a nonexistent input path each produce a clear
+  error message and a distinct, non-zero exit code instead of a stack trace.
