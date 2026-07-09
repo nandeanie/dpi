@@ -131,3 +131,24 @@ Compiles everything into `./out`.
 ```bash
 mvn -q package
 ```
+
+Produces `target/dpi-packet-analyzer.jar` with a runnable manifest (defaults to the
+interactive console app).
+
+## How to run
+
+```bash
+# Single-threaded engine
+./run-single.sh --in sample.pcap --out filtered.pcap \
+  --block-app YOUTUBE --block-domain doubleclick --block-ip 93.184.216.34
+
+# Multi-threaded pipeline (2 load balancers x 2 fast paths = 4 workers)
+./run-multithreaded.sh --in sample.pcap --out filtered.pcap \
+  --block-app YOUTUBE --load-balancers 2 --fast-paths-per-lb 2
+
+# Interactive console menu (prompts for everything, validates input)
+./run-console.sh
+```
+
+Or, after a Maven build:
+
