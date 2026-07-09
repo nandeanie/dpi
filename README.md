@@ -103,3 +103,31 @@ Main            Reader          LoadBalancer      FastPath        Writer
  │                                   │            evaluate block rule │
  │                                   │            [not blocked] put ─▶│
  │                                   │                │           write │
+ │  (loop until EOF)                 │                │              │
+ │  put(poison) on every LB queue ──▶│                │              │
+ │                                forward poison ────▶│              │
+ │                                   │ returns        │ returns      │
+ │  await all LB futures             │                │              │
+ │  await all FastPath futures                        │              │
+ │  put(poison) on output queue ─────────────────────────────────────▶│
+ │  await writer future                                                │ returns
+ │  print report                                                       │
+```
+
+## How to build
+
+Two ways — pick whichever you have available.
+
+### Option A — plain `javac` (no Maven required)
+
+```bash
+./build.sh
+```
+
+Compiles everything into `./out`.
+
+### Option B — Maven
+
+```bash
+mvn -q package
+```
