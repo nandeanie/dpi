@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.dpiengine</groupId>
+    <artifactId>dpi-packet-analyzer</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>DPI Packet Analyzer</name>
+    <description>
+        Java port of the C++ deep-packet-inspection engine: reads a PCAP capture, classifies
+        flows by TLS SNI / HTTP Host / well-known port, applies configurable block rules, and
+        writes the filtered capture back out. Ships both a single-threaded reference engine and
+        a concurrent reader/load-balancer/fast-path/writer pipeline built on ExecutorService.
+    </description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <build>
+        <finalName>dpi-packet-analyzer</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.dpiengine.ConsoleApp</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
