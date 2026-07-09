@@ -152,3 +152,38 @@ interactive console app).
 
 Or, after a Maven build:
 
+```bash
+java -jar target/dpi-packet-analyzer.jar
+java -cp target/dpi-packet-analyzer.jar com.dpiengine.DpiEngineMultiThreaded --in a.pcap --out b.pcap
+```
+
+### CLI flags
+
+| Flag                     | Required | Meaning                                                |
+|--------------------------|:--------:|---------------------------------------------------------|
+| `--in <file>`            | yes      | input `.pcap` path                                     |
+| `--out <file>`           | yes      | output `.pcap` path (filtered capture)                 |
+| `--block-app <NAME>`     | no       | repeatable; blocks an `AppType` (e.g. `YOUTUBE`, `TIKTOK`) |
+| `--block-domain <text>`  | no       | repeatable; blocks any hostname containing this substring |
+| `--block-ip <a.b.c.d>`   | no       | repeatable; blocks a specific IPv4 address              |
+| `--load-balancers <n>`   | no       | multi-threaded only, default 2                          |
+| `--fast-paths-per-lb <n>`| no       | multi-threaded only, default 2                          |
+
+## Networking / robustness notes
+
+- **Byte order**: the PCAP global header's magic number is checked to auto-detect
+  little-endian vs. byte-swapped captures; every per-packet header is then read with the
+  matching `ByteOrder`. Header *field* bytes inside Ethernet/IP/TCP/UDP are always big-endian
+  (network byte order), independent of the file's own byte order.
+- **Truncated/corrupt files**: a file too short for even the global header, a packet header
+  claiming more bytes than remain in the file, or a body cut off mid-read all raise
+  `PcapFormatException` with a specific message rather than throwing a raw, confusing I/O
+  exception or silently producing garbage.
+- **Malformed individual packets** (short frames, bad IHL, truncated TCP header) are caught
+  per-packet and skipped, so one bad frame in a multi-million-packet capture doesn't abort the
+  whole run.
+- **Resource safety**: `PcapFileReader` and `PcapFileWriter` are both `Closeable` and opened in
+  try-with-resources everywhere, so file handles are released even if a parse error or
+  interrupt happens mid-run.
+- **Backpressure**: every queue in the pipeline is a bounded `ArrayBlockingQueue`. If the
+  writer falls behind, `put()` blocks upstream naturally — no unbounded memory growth from a
