@@ -1,5 +1,6 @@
 # DPI Packet Analyzer 
 
+
 It reads a `.pcap` capture,
 classifies each flow (TLS SNI, HTTP Host header, or well-known port), applies configurable
 block rules, and writes the filtered capture back out. Ships two interchangeable engines:
