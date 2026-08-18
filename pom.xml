@@ -8,6 +8,7 @@
     <artifactId>dpi-packet-analyzer</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
+         
 
     <name>DPI Packet Analyzer</name>
     <description>
